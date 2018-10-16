@@ -57,6 +57,7 @@ class Chef
                                   " '#{new_resource.password}'"
                                 end
                 end
+                repair_client.query("SET SESSION sql_log_bin = 0")
                 repair_client.query(repair_sql)
               ensure
                 close_repair_client
@@ -89,6 +90,7 @@ class Chef
               begin
                 repair_sql = 'DROP USER'
                 repair_sql += " '#{new_resource.username}'@'#{new_resource.host}'"
+                repair_client.query("SET SESSION sql_log_bin = 0")
                 repair_client.query repair_sql
               ensure
                 close_repair_client
@@ -149,6 +151,7 @@ class Chef
 
                 redacted_sql = redact_password(repair_sql, new_resource.password)
                 Chef::Log.debug("#{@new_resource}: granting with sql [#{redacted_sql}]")
+                repair_client.query("SET SESSION sql_log_bin = 0")
                 repair_client.query(repair_sql)
                 repair_client.query('FLUSH PRIVILEGES')
               ensure
@@ -195,6 +198,7 @@ class Chef
                 revoke_statement += " FROM `#{@new_resource.username}`@`#{@new_resource.host}` "
 
                 Chef::Log.debug("#{@new_resource}: revoking access with statement [#{revoke_statement}]")
+                repair_client.query("SET SESSION sql_log_bin = 0")
                 repair_client.query(revoke_statement)
                 repair_client.query('FLUSH PRIVILEGES')
                 @new_resource.updated_by_last_action(true)
@@ -361,6 +365,7 @@ class Chef
                                 "IDENTIFIED BY '#{new_resource.password}'"
                               end
               end
+              repair_client.query("SET SESSION sql_log_bin = 0")
               repair_client.query(repair_sql)
             ensure
               close_repair_client
