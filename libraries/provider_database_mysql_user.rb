@@ -47,6 +47,7 @@ class Chef
           # repair
           unless user_present
             converge_by "Creating user '#{new_resource.username}'@'#{new_resource.host}'" do
+              Chef::Log.info("Creating MySQL user, '#{new_resource.username}'@'#{new_resource.host}'.")
               begin
                 repair_sql = "CREATE USER '#{new_resource.username}'@'#{new_resource.host}'"
                 if new_resource.password
@@ -87,6 +88,7 @@ class Chef
           # repair
           if user_present
             converge_by "Dropping user '#{new_resource.username}'@'#{new_resource.host}'" do
+              Chef::Log.info("Dropping MySQL user, '#{new_resource.username}'@'#{new_resource.host}'.")
               begin
                 repair_sql = 'DROP USER'
                 repair_sql += " '#{new_resource.username}'@'#{new_resource.host}'"
@@ -136,6 +138,7 @@ class Chef
           # Repair
           if incorrect_privs
             converge_by "Granting privs for '#{new_resource.username}'@'#{new_resource.host}'" do
+              Chef::Log.info("Granting #{new_resource.privileges.join(',')} to MySQL user, '#{new_resource.username}'@'#{new_resource.host}' on #{db_name}.#{tbl_name}.")
               begin
                 repair_sql = "GRANT #{new_resource.privileges.join(',')}"
                 repair_sql += " ON #{db_name}.#{tbl_name}"
@@ -192,6 +195,7 @@ class Chef
           # Repair
           unless privs_to_revoke.empty?
             converge_by "Revoking privs for '#{new_resource.username}'@'#{new_resource.host}'" do
+              Chef::Log.info("Revoking #{privs_to_revoke.join(',')} from MySQL user, '#{new_resource.username}'@'#{new_resource.host}' on #{db_name}.#{tbl_name}.")
               begin
                 revoke_statement = "REVOKE #{privs_to_revoke.join(',')}"
                 revoke_statement += " ON #{db_name}.#{tbl_name}"
@@ -347,6 +351,7 @@ class Chef
 
         def update_user_password
           converge_by "Updating password of user '#{new_resource.username}'@'#{new_resource.host}'" do
+            Chef::Log.info("Updating password of MySQL user, '#{new_resource.username}'@'#{new_resource.host}'.")
             begin
               if database_has_password_column(repair_client)
                 repair_sql = "SET PASSWORD FOR '#{new_resource.username}'@'#{new_resource.host}' = "
