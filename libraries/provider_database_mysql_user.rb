@@ -128,6 +128,16 @@ class Chef
                 key = "#{key}_priv"
                 incorrect_privs = true if r[key] != 'Y'
               end
+
+              # Check if the correct SSL requirements are enforced.
+              user = test_client.escape("#{new_resource.username}")
+              host = test_client.escape("#{new_resource.host}")
+              ssl_type_results = test_client.query("SELECT ssl_type FROM mysql.user WHERE User = '#{user}' AND Host = '#{host}'")
+              incorrect_privs = true if ssl_type_results.size.zero?
+
+              ssl_type = ssl_type_results.first['ssl_type']
+              incorrect_privs = true if ssl_type == 'ANY' && !new_resource.require_ssl
+              incorrect_privs = true if ssl_type == '' && new_resource.require_ssl
             end
 
             password_up_to_date = incorrect_privs || test_user_password
@@ -148,7 +158,11 @@ class Chef
                               else
                                 " '#{new_resource.password}'"
                               end
-                repair_sql += ' REQUIRE SSL' if new_resource.require_ssl
+                repair_sql += if new_resource.require_ssl
+                                ' REQUIRE SSL'
+                              else
+                                ' REQUIRE NONE'
+                              end
                 repair_sql += ' REQUIRE X509' if new_resource.require_x509
                 repair_sql += ' WITH GRANT OPTION' if new_resource.grant_option
 
